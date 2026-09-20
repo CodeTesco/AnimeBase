@@ -4,6 +4,7 @@ from scrapy import Request
 from scrapy.http import HtmlResponse
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
+from animeCrawler.items import CharacterItem
 
 
 USER_AGENT = (
@@ -12,20 +13,16 @@ USER_AGENT = (
     "Chrome/127.0.0.0 Safari/537.36"
 )
 
-
 class WikiSpider(CrawlSpider):
-    name = "wikiSpider"
+    name = "wikiCrawler"
     allowed_domains = ["jujutsu-kaisen.fandom.com"]
     start_urls = [
         "https://jujutsu-kaisen.fandom.com/api.php?"
         "action=query&list=categorymembers&cmtitle=Category:Characters&"
-        "cmnamespace=0&cmlimit=5&format=json&formatversion=2"
+        "cmnamespace=0&cmlimit=200&format=json&formatversion=2"
     ]
 
     custom_settings = {
-        'CLOSESPIDER_ITEMCOUNT': 5,
-        'CLOSESPIDER_PAGECOUNT': 5,
-        'DOWNLOAD_DELAY': 1.5,
         'USER_AGENT': USER_AGENT,
         'ROBOTSTXT_OBEY': False,
     }
@@ -66,6 +63,21 @@ class WikiSpider(CrawlSpider):
                 headers={"User-Agent": USER_AGENT},
             )
 
+        if "continue" in data and "cmcontinue" in data.get("continue", []):
+            continuation_token = data.get("continue", {}).get("cmcontinue", [])
+
+            next_url = (
+                "https://jujutsu-kaisen.fandom.com/api.php?"
+                "action=query&list=categorymembers&cmtitle=Category:Characters&"
+                f"cmlimit=500&cmcontinue={continuation_token}&"
+                "format=json&formatversion=2"
+            )
+            yield Request(
+                url=next_url,
+                callback=self.parse_start_url,
+                headers={"User-Agent": USER_AGENT}
+            )
+
     def parse_api_page(self, response):
         try:
             data = json.loads(response.text)
@@ -80,29 +92,24 @@ class WikiSpider(CrawlSpider):
             encoding="utf-8",
             request=response.request,
         )
-        yield from self.parse_characters(page_response)
+        yield from self.parse_characters(page_response, page_title)
 
-    def parse_characters(self, response):
+    def parse_characters(self, response, page_title):
         infobox = response.css("aside.portable-infobox")
         if not infobox:
             return
-
-        raw_name = response.css("h1#firstHeading::text").get()
-        character_name = raw_name.strip() if raw_name else "Unknown"
 
         abilities = self.extract_section(response, "Jujutsu")
         if not abilities:
             abilities = self.extract_section(response, "Abilities_and_Powers")
 
         print(f"URL: {response.url}")
-        yield {
-            "character": character_name,
-            "url": response.url,
-            "raw_abilities": abilities
-        }
-
-    def parse_items(self, response):
-        print(response.url)
+        print(page_title)
+        yield CharacterItem(
+            character=page_title,
+            url=response.url,
+            raw_abilities=abilities
+        )
 
     def extract_section(self, response, section):
         header = response.xpath(f"//h2[.//span[@id='{section}']]")

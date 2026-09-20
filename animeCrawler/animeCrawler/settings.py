@@ -20,13 +20,12 @@ DEPTH_PRIORITY = 1
 SCHEDULER_DISK_QUEUE = 'scrapy.squeues.PickleFifoDiskQueue'
 SCHEDULER_MEMORY_QUEUE = 'scrapy.squeues.FifoMemoryQueue'
 
-DOWNLOAD_DELAY = 1.5
-CONCURRENT_REQUESTS_PER_DOMAIN = 4
-
 COOKIES_ENABLED = False
 
 REDIRECT_ENABLED = False
 AJAXCRAWL_ENABLED = True
+AUTOTHROTTLE_ENABLED = False
+RETRY_ENABLED = False
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = "animeCrawler (+http://www.yourdomain.com)"
@@ -36,8 +35,9 @@ ROBOTSTXT_OBEY = True
 
 # Concurrency and throttling settings
 #CONCURRENT_REQUESTS = 16
-CONCURRENT_REQUESTS_PER_DOMAIN = 1
 DOWNLOAD_DELAY = 1
+DOWNLOAD_TIMEOUT = 5
+CONCURRENT_REQUESTS_PER_DOMAIN = 6
 
 # Disable cookies (enabled by default)
 #COOKIES_ENABLED = False
@@ -71,9 +71,9 @@ DOWNLOAD_DELAY = 1
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    "animeCrawler.pipelines.AnimecrawlerPipeline": 300,
-#}
+ITEM_PIPELINES = {
+   "animeCrawler.pipelines.AnimecrawlerPipeline": 300,
+}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html

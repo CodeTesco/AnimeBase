@@ -3,11 +3,9 @@
 # See documentation in:
 # https://docs.scrapy.org/en/latest/topics/items.html
 
-from dataclasses import dataclass
+import scrapy
 
-
-@dataclass
-class AnimecrawlerItem:
-    # define the fields for your item here like:
-    # name: str | None = None
-    pass
+class CharacterItem(scrapy.Item):
+    character = scrapy.Field()
+    url = scrapy.Field()
+    raw_abilities = scrapy.Field()
